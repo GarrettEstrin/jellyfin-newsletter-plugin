@@ -20,12 +20,35 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 # Keep the version in the project files in sync with the release.
-sed -i -E "s|<AssemblyVersion>.*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|; s|<FileVersion>.*</FileVersion>|<FileVersion>$VERSION</FileVersion>|" Jellyfin.Plugin.SlackNewsletter.csproj
-sed -i -E "s|^version: .*|version: \"$VERSION\"|" build.yaml
+python3 - "$VERSION" <<'PY'
+import re
+import sys
+
+v = sys.argv[1]
+
+
+def sub(path, pattern, replacement):
+    with open(path) as f:
+        text = f.read()
+    text = re.sub(pattern, lambda _: replacement, text, flags=re.M)
+    with open(path, "w") as f:
+        f.write(text)
+
+
+proj = "Jellyfin.Plugin.SlackNewsletter.csproj"
+sub(proj, r"<AssemblyVersion>.*?</AssemblyVersion>", f"<AssemblyVersion>{v}</AssemblyVersion>")
+sub(proj, r"<FileVersion>.*?</FileVersion>", f"<FileVersion>{v}</FileVersion>")
+sub("build.yaml", r"^version: .*$", f'version: "{v}"')
+PY
 
 if [[ -z "${SKIP_BUILD:-}" ]]; then
   rm -rf out
+  # Use a local SDK only if it is new enough for net10.0; otherwise build in Docker.
+  DOTNET_MAJOR=""
   if command -v dotnet >/dev/null 2>&1; then
+    DOTNET_MAJOR="$(dotnet --version 2>/dev/null | cut -d. -f1 || true)"
+  fi
+  if [[ "$DOTNET_MAJOR" =~ ^[0-9]+$ ]] && (( DOTNET_MAJOR >= 10 )); then
     dotnet publish -c Release -o out
   else
     docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -e DOTNET_CLI_HOME=/tmp \

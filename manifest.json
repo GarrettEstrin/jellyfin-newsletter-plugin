@@ -6,6 +6,15 @@
     "overview": "Weekly Slack newsletter with new media and a viewing leaderboard",
     "owner": "G",
     "category": "General",
-    "versions": []
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "changelog": "First release",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/garrettestrin/jellyfin-newsletter-plugin/releases/download/v0.1.0.0/slacknewsletter_0.1.0.0.zip",
+        "checksum": "BFA0DCE07CAA9CEAAC849F6D70601915",
+        "timestamp": "2026-11-18T05:02:39Z"
+      }
+    ]
   }
 ]
