@@ -1,0 +1,13 @@
+name: "Slack Newsletter"
+guid: "8f3c2b1e-6a4d-4c57-9e0b-2d1a7c5f9e43"
+version: "0.1.0.0"
+targetAbi: "12.0.0.0"
+framework: "net10.0"
+owner: "G"
+overview: "Weekly Slack newsletter with new media and a viewing leaderboard"
+description: >
+  Posts a weekly summary of newly added movies and episodes plus a leaderboard
+  of top viewers and most-watched titles to a Slack channel via an incoming webhook.
+category: "General"
+artifacts:
+  - "Jellyfin.Plugin.SlackNewsletter.dll"

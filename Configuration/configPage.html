@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Slack Newsletter</title>
+</head>
+<body>
+<div id="SlackNewsletterConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <h2>Slack Newsletter</h2>
+            <p>The weekly send time is set under Dashboard &rarr; Scheduled Tasks &rarr; Slack Newsletter.</p>
+            <form id="SlackNewsletterForm">
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="SlackWebhookUrl">Slack webhook URL</label>
+                    <input id="SlackWebhookUrl" type="text" is="emby-input" />
+                    <div class="fieldDescription">Create one at api.slack.com/apps &rarr; Incoming Webhooks.</div>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="ServerUrl">Server URL (optional)</label>
+                    <input id="ServerUrl" type="text" is="emby-input" />
+                    <div class="fieldDescription">If set, titles in the newsletter link to your server.</div>
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="LookbackDays">Days covered</label>
+                    <input id="LookbackDays" type="number" min="1" max="60" is="emby-input" />
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="LeaderboardSize">Leaderboard size</label>
+                    <input id="LeaderboardSize" type="number" min="1" max="20" is="emby-input" />
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="MaxNewItemsListed">Max new items listed</label>
+                    <input id="MaxNewItemsListed" type="number" min="1" max="50" is="emby-input" />
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="MinPlaySeconds">Ignore plays shorter than (seconds)</label>
+                    <input id="MinPlaySeconds" type="number" min="0" is="emby-input" />
+                </div>
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="ExcludedUsers">Exclude users (comma-separated)</label>
+                    <input id="ExcludedUsers" type="text" is="emby-input" />
+                </div>
+                <label class="checkboxContainer">
+                    <input id="SkipIfEmpty" type="checkbox" is="emby-checkbox" />
+                    <span>Skip the scheduled post if there is nothing to report</span>
+                </label>
+                <br />
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                    <button id="SendTest" is="emby-button" type="button" class="raised block emby-button">
+                        <span>Save and send now</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = '8f3c2b1e-6a4d-4c57-9e0b-2d1a7c5f9e43';
+            var page = document.querySelector('#SlackNewsletterConfigPage');
+
+            function read(config) {
+                page.querySelector('#SlackWebhookUrl').value = config.SlackWebhookUrl || '';
+                page.querySelector('#ServerUrl').value = config.ServerUrl || '';
+                page.querySelector('#LookbackDays').value = config.LookbackDays;
+                page.querySelector('#LeaderboardSize').value = config.LeaderboardSize;
+                page.querySelector('#MaxNewItemsListed').value = config.MaxNewItemsListed;
+                page.querySelector('#MinPlaySeconds').value = config.MinPlaySeconds;
+                page.querySelector('#ExcludedUsers').value = config.ExcludedUsers || '';
+                page.querySelector('#SkipIfEmpty').checked = !!config.SkipIfEmpty;
+            }
+
+            function write(config) {
+                config.SlackWebhookUrl = page.querySelector('#SlackWebhookUrl').value.trim();
+                config.ServerUrl = page.querySelector('#ServerUrl').value.trim().replace(/\/+$/, '');
+                config.LookbackDays = parseInt(page.querySelector('#LookbackDays').value, 10) || 7;
+                config.LeaderboardSize = parseInt(page.querySelector('#LeaderboardSize').value, 10) || 5;
+                config.MaxNewItemsListed = parseInt(page.querySelector('#MaxNewItemsListed').value, 10) || 15;
+                config.MinPlaySeconds = parseInt(page.querySelector('#MinPlaySeconds').value, 10) || 0;
+                config.ExcludedUsers = page.querySelector('#ExcludedUsers').value.trim();
+                config.SkipIfEmpty = page.querySelector('#SkipIfEmpty').checked;
+                return config;
+            }
+
+            function save() {
+                return ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    return ApiClient.updatePluginConfiguration(pluginId, write(config));
+                });
+            }
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    read(config);
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            page.querySelector('#SlackNewsletterForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                save().then(Dashboard.processPluginConfigurationUpdateResult);
+                return false;
+            });
+
+            page.querySelector('#SendTest').addEventListener('click', function () {
+                Dashboard.showLoadingMsg();
+                save().then(function () {
+                    return ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('SlackNewsletter/Send') });
+                }).then(function () {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Newsletter sent to Slack.');
+                }, function () {
+                    Dashboard.hideLoadingMsg();
+                    Dashboard.alert('Sending failed. Check the webhook URL and the Jellyfin log.');
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>
