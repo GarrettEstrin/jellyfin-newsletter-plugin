@@ -1,0 +1,11 @@
+[
+  {
+    "guid": "8f3c2b1e-6a4d-4c57-9e0b-2d1a7c5f9e43",
+    "name": "Slack Newsletter",
+    "description": "Posts a weekly summary of newly added movies and episodes plus a leaderboard of top viewers and most-watched titles to a Slack channel via an incoming webhook.",
+    "overview": "Weekly Slack newsletter with new media and a viewing leaderboard",
+    "owner": "G",
+    "category": "General",
+    "versions": []
+  }
+]

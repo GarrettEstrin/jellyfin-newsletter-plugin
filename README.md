@@ -45,3 +45,16 @@ Restart Jellyfin.
 
 - Playback shorter than the configured minimum (default 120 s) is ignored.
 - A stream that was already running when the server restarted is not counted, because its start was never seen.
+
+## Publishing a plugin repository on GitHub
+
+1. Create a **public** GitHub repo and push this project to it (`main` branch).
+2. Run `GITHUB_REPO=owner/repo ./release.sh 0.1.0.0 "First release"`. It builds the plugin (with the .NET 10 SDK
+   or Docker), zips the DLL into `dist/`, and adds the version, URL and MD5 checksum to `manifest.json`.
+3. If the GitHub CLI (`gh`) is installed and logged in, the script creates the release for you. Otherwise create a
+   release tagged `v0.1.0.0` on GitHub and attach the zip from `dist/`.
+4. Commit and push `manifest.json`.
+5. In Jellyfin: Dashboard → Plugins → Repositories → add
+   `https://raw.githubusercontent.com/owner/repo/main/manifest.json`, then install from the Catalog tab.
+
+For later releases, run the script with a higher version number and push the updated manifest.
